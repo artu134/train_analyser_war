@@ -16,17 +16,17 @@ from datasets.helpers.audiodatasets import PreprocessDataset, get_roll_func
 # follow the instructions here to get these 3 files:
 # https://github.com/kkoutini/PaSST/tree/main/fsd50k
 
-dataset_dir = None
+dataset_dir = "C:/Users/IronTony/Projects/data/dataset"
 
 assert dataset_dir is not None, "Specify FSD50K dataset location in variable 'dataset_dir'. " \
                                 "Check out the Readme file for further instructions. " \
                                 "https://github.com/fschmid56/EfficientAT/blob/main/README.md"
 
 dataset_config = {
-    'balanced_train_hdf5': os.path.join(dataset_dir, "FSD50K.train_mp3.hdf"),
-    'valid_hdf5': os.path.join(dataset_dir, "FSD50K.val_mp3.hdf"),
-    'eval_hdf5': os.path.join(dataset_dir, "FSD50K.eval_mp3.hdf"),
-    'num_of_classes': 200
+    'balanced_train_hdf5': os.path.join(dataset_dir, "dataset_train.hdf"),
+    'valid_hdf5': os.path.join(dataset_dir, "dataset_val.hdf"),
+    'eval_hdf5': os.path.join(dataset_dir, "dataset_eval.hdf"),
+    'num_of_classes': 5
 }
 
 
@@ -96,7 +96,7 @@ class MixupDataset(TorchDataset):
 
 
 class AudioSetDataset(TorchDataset):
-    def __init__(self, hdf5_file, resample_rate=32000, classes_num=200, clip_length=10,
+    def __init__(self, hdf5_file, resample_rate=32000, classes_num=5, clip_length=10,
                  in_mem=False, gain_augment=0):
         """
         Reads the mp3 bytes from HDF file decodes using av and returns a fixed length audio wav
@@ -143,14 +143,13 @@ class AudioSetDataset(TorchDataset):
         if self.dataset_file is None:
             self.open_hdf5()
 
-        audio_name = self.dataset_file['audio_name'][index].decode()
+        audio_name = self.dataset_file['audio_name'][index]  # .decode() we do not to decode here
         waveform = decode_mp3(self.dataset_file['mp3'][index])
         waveform = pydub_augment(waveform, self.gain_augment)
         waveform = pad_or_truncate(waveform, self.clip_length)
         waveform = self.resample(waveform)
         target = self.dataset_file['target'][index]
-        target = np.unpackbits(target, axis=-1,
-                               count=self.classes_num).astype(np.float32)
+        target = np.unpackbits(target, axis=-1).astype(np.float32)[-self.classes_num:]
         return waveform.reshape(1, -1), audio_name, target
 
     def resample(self, waveform):
@@ -172,7 +171,10 @@ class AudioSetDataset(TorchDataset):
 
 def get_base_training_set(resample_rate=32000, gain_augment=0):
     balanced_train_hdf5 = dataset_config['balanced_train_hdf5']
-    ds = AudioSetDataset(balanced_train_hdf5, resample_rate=resample_rate, gain_augment=gain_augment)
+    ds = AudioSetDataset(
+        balanced_train_hdf5, resample_rate=resample_rate,
+        gain_augment=gain_augment, classes_num=dataset_config['num_of_classes']
+    )
     return ds
 
 
@@ -180,9 +182,12 @@ def get_base_eval_set(resample_rate=32000, variable_eval=None):
     eval_hdf5 = dataset_config['eval_hdf5']
     if variable_eval:
         print("Variable length eval!!")
-        ds = AudioSetDataset(eval_hdf5, resample_rate=resample_rate, clip_length=None)
+        ds = AudioSetDataset(
+            eval_hdf5, resample_rate=resample_rate,
+            clip_length=None, classes_num=dataset_config['num_of_classes']
+        )
     else:
-        ds = AudioSetDataset(eval_hdf5, resample_rate=resample_rate)
+        ds = AudioSetDataset(eval_hdf5, resample_rate=resample_rate, classes_num=dataset_config['num_of_classes'])
     return ds
 
 
@@ -190,9 +195,12 @@ def get_base_valid_set(resample_rate=32000, variable_eval=None):
     valid_hdf5 = dataset_config['valid_hdf5']
     if variable_eval:
         print("Variable length valid_set !!")
-        ds = AudioSetDataset(valid_hdf5, resample_rate=resample_rate, clip_length=None)
+        ds = AudioSetDataset(
+            valid_hdf5, resample_rate=resample_rate,
+            clip_length=None, classes_num=dataset_config['num_of_classes']
+        )
     else:
-        ds = AudioSetDataset(valid_hdf5, resample_rate=resample_rate)
+        ds = AudioSetDataset(valid_hdf5, resample_rate=resample_rate, classes_num=dataset_config['num_of_classes'])
     return ds
 
 

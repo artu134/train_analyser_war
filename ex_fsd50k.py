@@ -48,12 +48,16 @@ def train(args):
     pretrained_name = args.pretrained_name
     if pretrained_name:
         model_width = NAME_TO_WIDTH(pretrained_name)
-        model = get_mobilenet(width_mult=model_width, pretrained_name=pretrained_name,
-                              head_type=args.head_type, se_dims=args.se_dims, num_classes=200)
+        model = get_mobilenet(
+            width_mult=model_width, pretrained_name=pretrained_name,
+            head_type=args.head_type, se_dims=args.se_dims, num_classes=args.num_classes
+        )
     else:
         model_width = args.model_width
-        model = get_mobilenet(width_mult=model_width, head_type=args.head_type, se_dims=args.se_dims,
-                              num_classes=200)
+        model = get_mobilenet(
+            width_mult=model_width,
+            head_type=args.head_type, se_dims=args.se_dims, num_classes=args.num_classes
+        )
     model.to(device)
 
     # dataloader
@@ -191,7 +195,9 @@ def evaluate(args):
     device = torch.device('cuda') if args.cuda and torch.cuda.is_available() else torch.device('cpu')
 
     # load pre-trained model
-    model = get_mobilenet(width_mult=NAME_TO_WIDTH(model_name), pretrained_name=model_name, num_classes=200)
+    model = get_mobilenet(
+        width_mult=NAME_TO_WIDTH(model_name), pretrained_name=model_name, num_classes=args.num_classes
+    )
     model.to(device)
     model.eval()
 
@@ -245,8 +251,9 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--experiment_name', type=str, default="FSD50K")
-    parser.add_argument('--train', action='store_true', default=False)
+    parser.add_argument('--train', action='store_true', default=True)
     parser.add_argument('--cuda', action='store_true', default=False)
+    parser.add_argument('--num_classes', type=int, default=5)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--num_workers', type=int, default=12)
 
@@ -255,7 +262,7 @@ if __name__ == '__main__':
     parser.add_argument('--variable_eval_length', action='store_true', default=False)
 
     # training
-    parser.add_argument('--pretrained_name', type=str, default=None)
+    parser.add_argument('--pretrained_name', type=str, default="mn10_as")
     parser.add_argument('--model_width', type=float, default=1.0)
     parser.add_argument('--head_type', type=str, default="mlp")
     parser.add_argument('--se_dims', type=str, default="c")
