@@ -1,0 +1,17 @@
+
+wandb: Waiting for W&B process to finish... (success).
+wandb: 
+wandb: Run history:
+wandb:           ROC ▁▃▅▆▇▇██████████████████████████████████
+wandb: learning_rate ███▆▄▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:           mAP ▁▃▄▅▆▇▇▇▇▇▇██████▇██████████████████████
+wandb:    train_loss █▆▅▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:      val_loss █▇▅▄▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: Run summary:
+wandb:           ROC 0.75756
+wandb: learning_rate 0.0
+wandb:           mAP 0.50446
+wandb:      val_loss 0.46181
+wandb: You can sync this run to the cloud by running:
+wandb: wandb sync C:\Users\UserVR\Desktop\thesis_tartu\train_analyser_war\wandb\offline-run-20240426_193320-pkwdkohn
+wandb: Find logs at: .\wandb\offline-run-20240426_193320-pkwdkohn\logs

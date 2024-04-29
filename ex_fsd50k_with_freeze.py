@@ -9,11 +9,49 @@ from sklearn import metrics
 import torch.nn.functional as F
 
 from datasets.fsd50k import get_eval_set, get_valid_set, get_training_set
-from models.MobileNetV3 import get_model as get_mobilenet
+import models.MobileNetV3 
+from models.MobileNetV3 import get_model as get_mobilenet, MobileNetV3 as mobile
 from models.preprocess import AugmentMelSTFT
 from helpers.init import worker_init_fn
 from helpers.utils import NAME_TO_WIDTH, exp_warmup_linear_down, mixup
 
+def freeze_layers(model:mobile, count_freeze=8):
+    """
+    Freezes specified layers in the model by setting requires_grad to False.
+    count_freeze specifies how many layers to freeze.
+    """
+    layers_frozen = [f"features.{num}" for num in range(count_freeze)]
+    count_inner = 0
+    params = model.named_parameters()
+    #model.features.
+    for layer in layers_frozen:
+        # Freeze until count_inner reaches count_freeze
+        for name, param in params: 
+            if "features" in name:
+                print("Frozen:" + name)
+                param.requires_grad = False
+              
+            else: 
+                print("Tried to freeze:" + name)
+      
+def freeze_modules(model:mobile, count_freeze=8):
+    """
+    Freezes specified layers in the model by setting requires_grad to False.
+    count_freeze specifies how many layers to freeze.
+    """
+    count_inner = 0
+    feat = model.features
+    #if len(model.features.children()) > count_freeze: 
+    #    raise Exception("Too much to freeze")
+    
+    for m in model.features:
+        # Freeze until count_inner reaches count_freeze
+        if count_inner < count_freeze:
+            m.requires_grad_(False)
+            print(f"Name of frozen layer: {m._get_name()};")
+            count_inner += 1
+        else:
+            break
 
 def train(args):
     # Train Models on FSD50K
@@ -60,7 +98,9 @@ def train(args):
         )
     model.to(device)
 
-
+    
+    layers_to_freeze = args.layers_to_freeze  # Pass as a command line argument or specify directly
+    freeze_modules(model, layers_to_freeze)
     # dataloader
     dl = DataLoader(dataset=get_training_set(resample_rate=args.resample_rate, roll=args.roll,
                                              wavmix=args.wavmix, gain_augment=args.gain_augment),
@@ -186,8 +226,21 @@ def _test(model, mel, eval_loader, device):
     targets = np.concatenate(targets)
     outputs = np.concatenate(outputs)
     losses = np.stack(losses)
+     # Convert outputs to binary labels
+    outputs_binary = (outputs > 0.5).astype(int)
+
+    # Confusion Matrix
+    conf_matrix = metrics.confusion_matrix(targets.argmax(axis=1), outputs_binary.argmax(axis=1))
+
+    # Class-wise Precision
+    precision_scores = metrics.precision_score(targets, outputs_binary, average=None)
+
     mAP = metrics.average_precision_score(targets, outputs, average=None)
     ROC = metrics.roc_auc_score(targets, outputs, average=None)
+    # Print confusion matrix and precision scores
+    print("Confusion Matrix:\n", conf_matrix)
+    print("Class-wise Precision:", precision_scores)
+
     return mAP.mean(), ROC.mean(), losses.mean()
 
 
@@ -273,6 +326,7 @@ if __name__ == '__main__':
     parser.add_argument('--wavmix', action='store_true', default=False)
     parser.add_argument('--gain_augment', type=int, default=0)
     parser.add_argument('--weight_decay', type=int, default=0.0001)
+    parser.add_argument("--layers_to_freeze", type=int, default=8)
     # lr schedule
     parser.add_argument('--lr', type=float, default=5e-5)
     # individual learning rates possible for classifier, features or last layer
