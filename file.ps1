@@ -1,0 +1,3 @@
+python .\ex_fsd50k_with_freeze.py --n_epochs 50 --pretrained_name "mn10_as" --experiment_name "Frozen mn10 for 50 with no airplane" --train  --dataset_name_val "dataset_val_without_ariplane.hdf" --dataset_name_train "dataset_train_without_ariplane.hdf" --num_classes 4;
+
+python .\ex_fsd50k_with_freeze.py --n_epochs 50 --pretrained_name "mn10_as" --experiment_name "Frozen mn10 for 50 with no background and less explosions" --train  --dataset_name_val "dataset_val_without_background_less_explosion.hdf" --dataset_name_train "dataset_train_without_background_less_explosion.hdf" --num_classes 4;

@@ -1,3 +1,4 @@
+import logging.config
 import wandb
 import numpy as np
 import os
@@ -8,12 +9,16 @@ import argparse
 from sklearn import metrics
 import torch.nn.functional as F
 
-from datasets.fsd50k import get_eval_set, get_valid_set, get_training_set
+from datasets.fsd50k import get_eval_set, get_valid_set, get_training_set, dataset_config, dataset_dir
 import models.MobileNetV3 
 from models.MobileNetV3 import get_model as get_mobilenet, MobileNetV3 as mobile
 from models.preprocess import AugmentMelSTFT
 from helpers.init import worker_init_fn
 from helpers.utils import NAME_TO_WIDTH, exp_warmup_linear_down, mixup
+import logging 
+
+logging.basicConfig()
+
 
 def freeze_layers(model:mobile, count_freeze=8):
     """
@@ -102,6 +107,11 @@ def train(args):
     layers_to_freeze = args.layers_to_freeze  # Pass as a command line argument or specify directly
     freeze_modules(model, layers_to_freeze)
     # dataloader
+    if args.dataset_name_val and args.dataset_name_train: 
+        dataset_config["valid_hdf5"] =  os.path.join(dataset_dir, args.dataset_name_val)
+        dataset_config["balanced_train_hdf5"] = os.path.join(dataset_dir, args.dataset_name_train)
+        dataset_config["num_of_classes"] = args.num_classes
+
     dl = DataLoader(dataset=get_training_set(resample_rate=args.resample_rate, roll=args.roll,
                                              wavmix=args.wavmix, gain_augment=args.gain_augment),
                     worker_init_fn=worker_init_fn,
@@ -229,6 +239,9 @@ def _test(model, mel, eval_loader, device):
      # Convert outputs to binary labels
     outputs_binary = (outputs > 0.5).astype(int)
 
+    print(f"Targets:  {targets}")
+    print(f"Targets:  {outputs}")
+    print(f"Targets:  {outputs_binary}")
     # Confusion Matrix
     conf_matrix = metrics.confusion_matrix(targets.argmax(axis=1), outputs_binary.argmax(axis=1))
 
@@ -240,6 +253,9 @@ def _test(model, mel, eval_loader, device):
     # Print confusion matrix and precision scores
     print("Confusion Matrix:\n", conf_matrix)
     print("Class-wise Precision:", precision_scores)
+    wandb.log({
+                   "class_wise_precision": precision_scores[2]
+                   })
 
     return mAP.mean(), ROC.mean(), losses.mean()
 
@@ -307,10 +323,11 @@ if __name__ == '__main__':
     parser.add_argument('--experiment_name', type=str, default="FSD50K")
     parser.add_argument('--train', action='store_true', default=True)
     parser.add_argument('--cuda', action='store_true', default=True)
-    parser.add_argument('--num_classes', type=int, default=5)
+    parser.add_argument('--num_classes', type=int, default=4)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--num_workers', type=int, default=12)
-
+    parser.add_argument('--dataset_name_val', type=str, default="dataset_val_without_ariplane.hdf")
+    parser.add_argument('--dataset_name_train', type=str, default="dataset_train_without_ariplane.hdf")
     # validation & evaluation
     # required setting validation and evaluation batch size to 1
     parser.add_argument('--variable_eval_length', action='store_true', default=False)

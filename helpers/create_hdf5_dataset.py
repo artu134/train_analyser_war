@@ -35,8 +35,8 @@ def collect_files(root):
     return folders, files
 
 
-source_path = "C:/Users/IronTony/Projects/data/dataset/train_mp3"
-dest_path = "C:/Users/IronTony/Projects/data/dataset/dataset.hdf"
+source_path = "../dataset_main/dataset/train_mp3"
+dest_path = "../dataset_main/dataset/dataset_train_without_background_less_explosion.hdf"
 
 labels = os.listdir(source_path)
 

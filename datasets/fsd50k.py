@@ -25,7 +25,7 @@ assert dataset_dir is not None, "Specify FSD50K dataset location in variable 'da
 dataset_config = {
     'balanced_train_hdf5': os.path.join(dataset_dir, "dataset_train.hdf"),
     'valid_hdf5': os.path.join(dataset_dir, "dataset_val.hdf"),
-    'eval_hdf5': os.path.join(dataset_dir, "dataset_eval.hdf"),
+    'eval_hdf5': os.path.join(dataset_dir, "dataset_val.hdf"),
     'num_of_classes': 5
 }
 

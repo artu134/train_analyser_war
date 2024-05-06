@@ -54,6 +54,9 @@ pretrained_models = {
     # fully-convolutional head
     "mn10_as_fc": urllib.parse.urljoin(model_url, "mn10_as_fc_mAP_465.pt"),
     "mn10_as_fc_s2221": urllib.parse.urljoin(model_url, "mn10_as_fc_s2221_mAP_466.pt"),
+    "mn10_full": "./evaluated_models/mn10_full.pt",
+    "mn10_freeze": "./evaluated_models/mn10_freeze.pt",
+    "mn30_full": "./resources/mn30_full.pt"
 }
 
 
