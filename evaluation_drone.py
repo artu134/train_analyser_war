@@ -22,7 +22,7 @@ import argparse
 from sklearn import metrics
 import torch.nn.functional as F
 
-from datasets.fsd50k import get_eval_set, get_valid_set, get_training_set
+from datasets.fsd50k import get_eval_set, get_valid_set, get_training_set, dataset_dir, dataset_config
 from models.MobileNetV3 import get_model as get_mobilenet
 from models.preprocess import AugmentMelSTFT
 from helpers.init import worker_init_fn
@@ -79,7 +79,8 @@ def evaluate(args):
         fmax_aug_range=args.fmax_aug_range
     )
     mel.to(device)
-
+    if args.dataset_name_val: 
+        dataset_config["eval_hdf5"] =  os.path.join(dataset_dir, args.dataset_name_val)
     # Evaluation DataLoader
     eval_dl = DataLoader(get_eval_set(resample_rate=args.resample_rate, variable_eval=args.variable_eval_length),
                          worker_init_fn=worker_init_fn, num_workers=args.num_workers,
@@ -101,18 +102,22 @@ def evaluate(args):
     # Combine and convert to binary labels
     targets = np.concatenate(targets)
     outputs = np.concatenate(outputs)
-    outputs_binary = (outputs > 0.7).astype(int)
+    outputs_binary = (outputs).astype(float)
 
+    outputs_binary = (outputs_binary) 
+    outputs_bin = (outputs_binary < -0.3)
+    print(f"Outputs binary before argmax {outputs_binary}")
     # Extract true and predicted labels for visualization
     true_labels = targets.argmax(axis=1).tolist()
     predicted_labels = outputs_binary.argmax(axis=1).tolist()
-    print(predicted_labels)
+    print(f"Predicted labels: {predicted_labels}")
     # List of class names
-    class_names = ["Airplane", "Background", "Drone", "Explosion", "Helicopter"]
+    class_names = ["Airplane", # "Background",
+                    "Drone", "Explosion", "Helicopter"]
 
     print(f"Targets:  {targets}")
     print(f"Outputs:  {outputs}")
-    print(f"Binary_outputs:  {outputs_binary}")
+    #print(f"Binary_outputs:  {outputs_binary}")
     # Confusion Matrix
     conf_matrix = metrics.confusion_matrix(targets.argmax(axis=1), outputs_binary.argmax(axis=1))
     print(f"confusion: {conf_matrix}")
@@ -136,7 +141,7 @@ def _mel_forward(x, mel):
     x = mel(x)
     x = x.reshape(old_shape[0], old_shape[1], x.shape[1], x.shape[2])
     return x
-
+ 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Model Evaluation Script')
 
@@ -145,6 +150,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_name', type=str, required=True, help="Name of the model to load")
     parser.add_argument('--num_classes', type=int, default=5, help="Number of classes")
     parser.add_argument('--cuda', action='store_true', help="Use CUDA if available")
+    parser.add_argument('--dataset_name_val', type=str, default="dataset_val_without_background_less_explosion.hdf")
 
     # Preprocessing
     parser.add_argument('--resample_rate', type=int, default=32000, help="Sampling rate for audio")

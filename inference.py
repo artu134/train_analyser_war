@@ -23,11 +23,9 @@ def audio_tagging(args):
     n_mels = args.n_mels
 
     # load pre-trained model
-    if len(args.ensemble) > 0:
-        model = get_ensemble_model(args.ensemble)
-    else:
-        model = get_mobilenet(width_mult=NAME_TO_WIDTH(model_name), pretrained_name=model_name, strides=args.strides,
-                              head_type=args.head_type)
+  
+    model = get_mobilenet(width_mult=NAME_TO_WIDTH(model_name), pretrained_name=model_name, strides=args.strides,
+                              head_type=args.head_type, num_classes=5)
     model.to(device)
     model.eval()
 
@@ -48,10 +46,11 @@ def audio_tagging(args):
     preds = torch.sigmoid(preds.float()).squeeze().cpu().numpy()
 
     sorted_indexes = np.argsort(preds)[::-1]
+    print(preds)
 
     # Print audio tagging top probabilities
     print("************* Acoustic Event Detected: *****************")
-    for k in range(10):
+    for k in range(4):
         print('{}: {:.3f}'.format(labels[sorted_indexes[k]],
             preds[sorted_indexes[k]]))
     print("********************************************************")
@@ -59,6 +58,7 @@ def audio_tagging(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Example of parser. ')
+    
     # model name decides, which pre-trained model is loaded
     parser.add_argument('--model_name', type=str, default='mn10_as')
     parser.add_argument('--strides', nargs=4, default=[2, 2, 2, 2], type=int)

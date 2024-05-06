@@ -56,7 +56,8 @@ pretrained_models = {
     "mn10_as_fc_s2221": urllib.parse.urljoin(model_url, "mn10_as_fc_s2221_mAP_466.pt"),
     "mn10_full": "./evaluated_models/mn10_full.pt",
     "mn10_freeze": "./evaluated_models/mn10_freeze.pt",
-    "mn30_full": "./resources/mn30_full.pt"
+    "mn30_full": "./resources/mn30_full.pt",
+    "mn10_nobackgrd_less_explosions": "./resources/mn10_nobackgrd_less_explosions.pt"
 }
 
 
@@ -260,6 +261,7 @@ def _mobilenet_v3(
 
     if pretrained_name in pretrained_models:
         model_url = pretrained_models.get(pretrained_name)
+        print(f"model url: {model_url}")
         state_dict = load_state_dict_from_url(model_url, model_dir=model_dir, map_location="cpu")
         if kwargs['head_type'] == "mlp":
             num_classes = state_dict['classifier.5.bias'].size(0)
@@ -337,7 +339,7 @@ def get_model(num_classes: int = 527, pretrained_name: str = None, width_mult: f
                      head_type=head_type, multihead_attention_heads=multihead_attention_heads,
                      input_dims=input_dims, se_conf=se_conf
                      )
-    print(m)
+    
     return m
 
 

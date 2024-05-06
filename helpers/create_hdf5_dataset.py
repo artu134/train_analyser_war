@@ -36,7 +36,7 @@ def collect_files(root):
 
 
 source_path = "../dataset_main/dataset/train_mp3"
-dest_path = "../dataset_main/dataset/dataset_train_without_background_less_explosion.hdf"
+dest_path = "../dataset_main/dataset/dataset_train_without_background_less_explosion_2.hdf"
 
 labels = os.listdir(source_path)
 
@@ -63,10 +63,10 @@ with h5py.File(dest_path, 'w') as hf:
 # Validate the created hdf5 file
 # Make sure to do it, otherwise you will get errors during training
 with h5py.File(dest_path, "r") as f:
-    # Print everything
-    # for key in f.keys():
-    #     for i in range(len(f[key])):
-    #         print(f"{i}: {f[key][i]}")
+    #Print everything
+    for key in f.keys():
+        for i in range(len(f[key])):
+            print(f"{i}: {f[key][i]}")
 
     all_keys = list(f.keys())
     name = all_keys[0]

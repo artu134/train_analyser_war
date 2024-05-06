@@ -237,11 +237,11 @@ def _test(model, mel, eval_loader, device):
     outputs = np.concatenate(outputs)
     losses = np.stack(losses)
      # Convert outputs to binary labels
-    outputs_binary = (outputs > 0.5).astype(int)
+    outputs_binary = (outputs > 0.3)
 
     print(f"Targets:  {targets}")
-    print(f"Targets:  {outputs}")
-    print(f"Targets:  {outputs_binary}")
+    print(f"Outputs:  {outputs}")
+    print(f"Binary:  {outputs_binary}")
     # Confusion Matrix
     conf_matrix = metrics.confusion_matrix(targets.argmax(axis=1), outputs_binary.argmax(axis=1))
 
